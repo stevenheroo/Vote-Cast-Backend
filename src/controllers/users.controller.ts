@@ -36,7 +36,6 @@ export class UsersController {
   @UseGuards(RoleAuthGuard)
   @Get('profile')
   getProfile(@Request() req) {
-    console.log(req.user.jti)
     return this.usersService.getProfile(req.user.jti);
   }
 

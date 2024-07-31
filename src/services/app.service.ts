@@ -1,23 +1,22 @@
 import {HttpException, HttpStatus, Injectable} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {Model} from "mongoose";
-import {GenericObj} from "../models/schemas/generic.schema";
 import {DeleteResult} from "mongodb";
 import {CustomPaginator, customResponse} from "../utils/responses";
 import {Status} from "../models/schemas/enums/status.enum";
 import {Competitions} from "../models/schemas/competition.schema";
+import {Ids} from "../models/dto/ids";
 
 @Injectable()
 export class AppService {
 
   constructor(
       @InjectModel(Competitions.name) private readonly competitionModel: Model<Competitions>){}
-  async create(userId:string, req: Competitions) {
+  async createCompetition(userId:string, req: Competitions) {
     let result;
     try{
       req.status = Status.pending;
       req.userId = userId;
-      console.log(req);
       result = await new this.competitionModel(req).save();
     }catch (error) {
       console.log(error);
@@ -35,7 +34,7 @@ export class AppService {
   async findAllCompetitions(page: number, limit: number, status: string) {
 
     let totalCount : number;
-    if(status === 'all'){
+    if(status.toUpperCase() === 'ALL'){
       totalCount = await this.competitionModel.countDocuments();
     }else {
       totalCount = await this.competitionModel.countDocuments({
@@ -52,7 +51,7 @@ export class AppService {
 
     let results;
 
-    if (status === 'all') {
+    if (status.toUpperCase() === 'ALL') {
       results = await this.competitionModel.find({},
           {
             '_id': 1,
@@ -161,11 +160,22 @@ export class AppService {
   }
 
 
-  async findCompetitionById(id: string) {
+  async findCompetitionById(header: any, id: string) {
     try{
-      const result = await this.competitionModel.findOne({
-        _id: id
-      }).exec();
+      const userId = header.user.jti;
+      const role = header.user.sub;
+
+      let result;
+      if (role.toLowerCase() === 'user') {
+        result = await this.competitionModel.findOne({
+          _id: id,
+          userId: userId
+        }).exec();
+      }else {
+        result = await this.competitionModel.findOne({
+          _id: id,
+        }).exec();
+      }
       return {
         "response": result != null
             ? new HttpException(customResponse.success, HttpStatus.OK )
@@ -179,9 +189,22 @@ export class AppService {
     }
   }
 
-  async removeCompetition(_id: string) {
+  async removeCompetition(header: any, ids: Ids) {
     try{
-      const result: DeleteResult = await this.competitionModel.deleteOne({_id}).exec();
+      const userId = header.user.jti;
+      const role = header.user.sub;
+
+      let result: DeleteResult;
+
+      if (role.toLowerCase() === 'user') {
+        result = await this.competitionModel.deleteMany({
+          '_id': { $in: ids.ids },
+          userId: userId
+        }).exec();
+      }else {
+        result = await this.competitionModel.deleteOne({'_id': { $in: ids.ids }}).exec();
+      }
+
       return {
         "response": result.deletedCount != 0
             ? new HttpException(customResponse.success, HttpStatus.OK )
@@ -195,12 +218,13 @@ export class AppService {
     }
   }
 
-  async updateCompetition(_id: string, req: GenericObj) {
+  async updateCompetition(userId: string, id: string, req: Competitions) {
     try {
+      req.updatedAt = new Date();
       const result = await this.competitionModel.findOneAndUpdate(
-          { "_id": _id},
+          { "_id": id},
           {
-            "competitions": req
+            $set: req
           },
           {new: true}
       );
@@ -238,12 +262,13 @@ export class AppService {
     }
   }
 
-  async updateCompetitionStatus(jti: string, id: string, status: Status) {
+  async updateCompetitionStatus(userId: string, id: string, status: Status) {
     try {
       const result = await this.competitionModel.findOneAndUpdate(
           { "_id": id},
           {
-            "status": status,
+            'status': status,
+            'updatedBy': userId,
             'updatedAt': new Date()
           },
           {new: true}

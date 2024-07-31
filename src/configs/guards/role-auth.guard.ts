@@ -25,11 +25,11 @@ export class RoleAuthGuard implements CanActivate {
     try {
       req['user'] = await this.jwtService.verifyAsync(token, { secret: jwtConstants.secret });
       const userRole = req.user.sub.toLowerCase();
-      console.log("user's current role == " + userRole);
-      console.log("allowed role to access == " + roles)
-      let isAllowed = roles.includes(userRole);
-      console.log("is allowed == " + isAllowed)
-      return isAllowed;
+      // console.log("user's current role == " + userRole);
+      // console.log("allowed role to access == " + roles)
+      // let isAllowed = roles.includes(userRole);
+      // console.log("is allowed == " + isAllowed)
+      return roles.includes(userRole);
     }
     catch {
       throw new UnauthorizedException();

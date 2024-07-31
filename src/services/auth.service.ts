@@ -82,7 +82,6 @@ export class AuthService {
 
   async findUser(username: string) {
     const user = await this.usersService.findUserByEmail(username);
-    console.log(user)
     if (!user) {
       return null;
     }

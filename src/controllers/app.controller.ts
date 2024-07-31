@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Patch, Post, Query, Request, UseGuards} from "@nestjs/common";
+import {Body, Controller, Delete, Get, Param, Patch, Post, Query, Request, UseGuards} from "@nestjs/common";
 import {AppService} from "../services/app.service";
 import {Roles} from "../utils/validators";
 import {ApiTags} from "@nestjs/swagger";
@@ -6,6 +6,7 @@ import {Role} from "../models/schemas/enums/role.enum";
 import {RoleAuthGuard} from "../configs/guards/role-auth.guard";
 import {Competitions} from "../models/schemas/competition.schema";
 import {Status} from "../models/schemas/enums/status.enum";
+import {Ids} from "../models/dto/ids";
 
 @Controller('api/v1/competition')
 @ApiTags("App")
@@ -16,7 +17,14 @@ export class AppController {
   @UseGuards(RoleAuthGuard)
   @Post('create')
   async createCompetition(@Request() hReq, @Body() req: Competitions) {
-    return await this.appService.create(hReq.user.jti, req);
+    return await this.appService.createCompetition(hReq.user.jti, req);
+  }
+
+  @Roles(Role.Admin, Role.User)
+  @UseGuards(RoleAuthGuard)
+  @Patch('update/:id')
+  async updateCompetition(@Request() hReq, @Param('id') id: string, @Body() req: Competitions) {
+    return await this.appService.updateCompetition(hReq.user.jti, id, req);
   }
 
   @Roles(Role.Admin)
@@ -40,15 +48,15 @@ export class AppController {
   @Roles(Role.Admin, Role.User)
   @UseGuards(RoleAuthGuard)
   @Get("show-details")
-  async findCompetitionById(@Query('id') id: string) {
-    return await this.appService.findCompetitionById(id);
+  async findCompetitionById(@Request() hReq, @Query('id') id: string) {
+    return await this.appService.findCompetitionById(hReq, id);
   }
 
   @Roles(Role.Admin, Role.User)
   @UseGuards(RoleAuthGuard)
   @Delete("remove")
-  async deleteCompetitionById(@Query('id') id: string) {
-    return await this.appService.removeCompetition(id);
+  async deleteCompetitionById(@Request() hReq, @Body() ids: Ids) {
+    return await this.appService.removeCompetition(hReq, ids);
   }
 
   @Roles(Role.Admin)
@@ -60,7 +68,7 @@ export class AppController {
 
   @Roles(Role.Admin)
   @UseGuards(RoleAuthGuard)
-  @Patch("admin/update-competition-status")
+  @Patch("admin/update-status")
   async updateCompetitionStatus(@Request() hReq, @Query('id') id: string, @Query('status') status: Status) {
     return await this.appService.updateCompetitionStatus(hReq.user.jti, id, status);
   }

@@ -17,7 +17,11 @@ export class GenericObj {
   @ApiProperty()
   email: string;
   @Prop()
+  approvedBy: string;
+  @Prop()
   approvedAt: Date;
+  @Prop()
+  updatedBy: string;
   @Prop()
   updatedAt: Date;
   @Prop()

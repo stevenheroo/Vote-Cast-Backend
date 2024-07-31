@@ -19,6 +19,7 @@ import {UsersController} from "./controllers/users.controller";
 import {AppController} from "./controllers/app.controller";
 import {AuthController} from "./controllers/auth.controller";
 import {Competitions, CompetitionSchema, Contestants, ContestantSchema} from "./models/schemas/competition.schema";
+import {MailService} from "./services/mail.service";
 
 @Module({
   imports:
@@ -41,7 +42,7 @@ import {Competitions, CompetitionSchema, Contestants, ContestantSchema} from "./
       ],
   controllers: [UsersController, AppController, AuthController],
   providers: [
-    AppService, AwsService,
+    AppService, AwsService, MailService,
     {
       provide: APP_GUARD,
       useClass: AuthGuards

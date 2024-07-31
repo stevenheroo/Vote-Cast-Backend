@@ -18,7 +18,7 @@ import {UsersService} from "./services/users.service";
 import {UsersController} from "./controllers/users.controller";
 import {AppController} from "./controllers/app.controller";
 import {AuthController} from "./controllers/auth.controller";
-import {Competitions, CompetitionSchema} from "./models/schemas/competition.schema";
+import {Competitions, CompetitionSchema, Contestants, ContestantSchema} from "./models/schemas/competition.schema";
 
 @Module({
   imports:
@@ -30,7 +30,8 @@ import {Competitions, CompetitionSchema} from "./models/schemas/competition.sche
         MongooseModule.forFeature([
           { name: User.name, schema: UserSchema },
           { name: Competitions.name, schema: CompetitionSchema },
-          { name: GenericObj.name, schema: GenericSchema }
+          { name: GenericObj.name, schema: GenericSchema },
+          { name: Contestants.name, schema: ContestantSchema }
         ]),
         JwtModule.register({
           secret: jwtConstants.secret,

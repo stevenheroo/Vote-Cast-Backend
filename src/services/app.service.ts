@@ -4,20 +4,44 @@ import {Model} from "mongoose";
 import {DeleteResult} from "mongodb";
 import {CustomPaginator, customResponse} from "../utils/responses";
 import {Status} from "../models/schemas/enums/status.enum";
-import {Competitions} from "../models/schemas/competition.schema";
+import {Competitions, Contestants} from "../models/schemas/competition.schema";
 import {Ids} from "../models/dto/ids";
+import {ContestantObj} from "../models/dto/contestant";
 
 @Injectable()
 export class AppService {
 
+  private excludedFields = ['__v'];
   constructor(
-      @InjectModel(Competitions.name) private readonly competitionModel: Model<Competitions>){}
+      @InjectModel(Competitions.name) private readonly competitionModel: Model<Competitions>,
+      @InjectModel(Contestants.name) private readonly contestantsModel: Model<Contestants>
+  ){}
   async createCompetition(userId:string, req: Competitions) {
     let result;
     try{
       req.status = Status.pending;
       req.userId = userId;
       result = await new this.competitionModel(req).save();
+    }catch (error) {
+      console.log(error);
+      return {
+        "id": '',
+        "response" :new HttpException('FAILED', HttpStatus.INTERNAL_SERVER_ERROR)
+      }
+    }
+    return {
+      "id": result._id,
+      "response" :new HttpException('SUCCESS', HttpStatus.CREATED)
+    }
+  }
+
+  async addContestants(userId:string, req: ContestantObj) {
+    let result;
+    try{
+      for (let i = 0; i < req.contestants.length; i++) {
+        req.contestants[i].userId = userId;
+      }
+      result = await this.contestantsModel.insertMany(req.contestants);
     }catch (error) {
       console.log(error);
       return {
@@ -58,8 +82,9 @@ export class AppService {
             status: 1,
             competitionName:1,
             description:1,
+            organizerName:1,
             image:1,
-            createdAt: 1
+            endDate: 1
           }
       )
           .sort({ _id: -1 })
@@ -74,8 +99,10 @@ export class AppService {
             '_id': 1,
             status: 1,
             competitionName:1,
+            organizerName:1,
+            description:1,
             image:1,
-            createdAt: 1
+            endDate: 1
           }
       )
           .sort({ _id: -1 })
@@ -109,8 +136,6 @@ export class AppService {
     paginator.requestedPageSize = limit;
     paginator.totalPages = totalCount;
 
-    const excludedFields = ['__v'];
-
     let results;
 
     if (status === 'all') {
@@ -121,14 +146,15 @@ export class AppService {
             '_id': 1,
             status: 1,
             competitionName:1,
+            organizerName:1,
             description:1,
             image:1,
-            createdAt: 1
+            endDate: 1
           }
       )
           .sort({ _id: -1 })
           .skip((page - 1) * limit)
-          .select({...excludedFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {}) })
+          .select({...this.excludedFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {}) })
           .limit(limit).exec();
     }else {
       results = await this.competitionModel.find({
@@ -139,13 +165,15 @@ export class AppService {
             '_id': 1,
             status: 1,
             competitionName:1,
+            organizerName:1,
+            description:1,
             image:1,
-            createdAt: 1
+            endDate: 1
           }
       )
           .sort({ _id: -1 })
           .skip((page - 1) * limit)
-          .select({...excludedFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {}) })
+          .select({...this.excludedFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {}) })
           .limit(limit).exec();
     }
 
@@ -176,6 +204,46 @@ export class AppService {
           _id: id,
         }).exec();
       }
+      return {
+        "response": result != null
+            ? new HttpException(customResponse.success, HttpStatus.OK )
+            : new HttpException(customResponse.empty, HttpStatus.NO_CONTENT),
+        "result": result
+      };
+    }catch (error) {
+      return {
+        "response": new HttpException(customResponse.empty, HttpStatus.NO_CONTENT)
+      }
+    }
+  }
+
+  async findContestants(categoryRef: string) {
+    try{
+      const result = await this.contestantsModel.find({
+        categoryRef: categoryRef,
+      }).select({...this.excludedFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {}) })
+          .exec();
+
+      return {
+        "response": result.length > 0
+            ? new HttpException(customResponse.success, HttpStatus.OK )
+            : new HttpException(customResponse.empty, HttpStatus.NO_CONTENT),
+        "result": result
+      };
+    }catch (error) {
+      return {
+        "response": new HttpException(customResponse.empty, HttpStatus.NO_CONTENT)
+      }
+    }
+  }
+
+  async findContestantById(id: string) {
+    try{
+      const result = await this.contestantsModel.findOne({
+        '_id': id,
+      }).select({...this.excludedFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {}) })
+          .exec();
+
       return {
         "response": result != null
             ? new HttpException(customResponse.success, HttpStatus.OK )
@@ -282,5 +350,45 @@ export class AppService {
         "response": new HttpException(customResponse.failed, 400)
       };
     }
+  }
+
+  async findActiveCompetitions(page: number, limit: number) {
+
+    const totalCount = await this.competitionModel.countDocuments({
+      'status': Status.active
+    });
+
+    const paginator = new CustomPaginator()
+    paginator.nextPage = (page * limit) > totalCount ? -1 : 1;
+    paginator.requestedPageSize = limit;
+    paginator.totalPages = totalCount;
+
+    const excludedFields = ['__v'];
+
+    const results = await this.competitionModel.find({
+          'status': Status.active
+        },
+        {
+          '_id': 1,
+          status: 1,
+          competitionName:1,
+          organizerName:1,
+          description:1,
+          image:1,
+          endDate: 1
+        }
+    )
+        .sort({ _id: -1 })
+        .skip((page - 1) * limit)
+        .select({...excludedFields.reduce((acc, field) => ({ ...acc, [field]: 0 }), {}) })
+        .limit(limit).exec();
+
+    return {
+      "response": results.length === 0
+          ? new HttpException(customResponse.empty, HttpStatus.NOT_FOUND)
+          : new HttpException(customResponse.success, HttpStatus.OK ),
+      "result": results,
+      paginator
+    };
   }
 }

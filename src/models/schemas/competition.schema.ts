@@ -41,6 +41,9 @@ export class Competitions extends GenericObj{
     @ApiProperty()
     voteAmount: string;
     @Prop()
+    @ApiProperty({ type: ()=> [Categories] })
+    categories: Categories[]
+    @Prop()
     @ApiProperty()
     startDate: Date;
     @Prop()
@@ -50,39 +53,52 @@ export class Competitions extends GenericObj{
 
 export class Categories {
     @IsNotEmpty()
+    @Prop({ unique: true })
+    @ApiProperty()
+    categoryRef: string;
+    @IsNotEmpty()
     @Prop({ required: true })
     @ApiProperty()
     name: string;
     @Prop()
     @ApiProperty()
     description: string;
-    @IsNotEmpty()
     @Prop()
     @ApiProperty()
-    category: string;
+    totalContestants: number;
     @Prop()
-    @ApiProperty({ type: () => [Contestants] })
-    contestants: Contestants[];
+    @ApiProperty()
+    totalVotes: number;
 }
 
+@Schema()
 export class Contestants {
     @IsNotEmpty()
-    @Prop({ required: true })
+    @Prop({})
+    @ApiProperty()
+    categoryRef: string;
+    @IsNotEmpty()
+    @Prop({ unique: true, required: true })
     @ApiProperty()
     name: string;
     @Prop()
     @ApiProperty()
     description: string;
-    @IsNotEmpty()
+    @Prop({ unique: true })
+    @ApiProperty()
+    voteCode: string;
     @Prop()
     @ApiProperty()
-    category: string;
+    totalVotes: number;
     @Prop()
     @ApiProperty()
     image: string;
+    @Prop()
+    userId: string;
 }
 
 
 export const CompetitionSchema = SchemaFactory.createForClass(Competitions);
+export const ContestantSchema = SchemaFactory.createForClass(Contestants);
 
 

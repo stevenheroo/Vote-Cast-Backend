@@ -238,6 +238,14 @@ export class AppService {
     }
   }
 
+  async findContestantByShortCode(shortCode: string) {
+    const result = await this.contestantsModel.findOne({shortCode: shortCode,}, {name: 1}).exec();
+    if (!result) {
+      return null;
+    }
+    return result;
+  }
+
   async findContestantById(id: string) {
     try{
       const result = await this.contestantsModel.findOne({

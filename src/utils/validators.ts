@@ -23,7 +23,7 @@ export function ValidPassword(validationOptions?: ValidationOptions) {
 }
 
 export const jwtConstants = {
-  secret: process.env.JWT_SERETE || 'mojo-cmp-is-live',
+  secret: process.env.JWT_SECRETE || 'vote-cast-is-live',
   expireDate: process.env.JWT_EXPIRY || '500s'
 };
 

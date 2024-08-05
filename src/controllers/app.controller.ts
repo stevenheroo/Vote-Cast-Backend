@@ -8,11 +8,15 @@ import {Competitions} from "../models/schemas/competition.schema";
 import {Status} from "../models/schemas/enums/status.enum";
 import {Ids} from "../models/dto/ids";
 import {ContestantObj} from "../models/dto/contestant";
+import {VoteDto} from "../models/dto/vote.dto";
+import {CreateEmailDto} from "../models/dto/create-email.dto";
+import {MailService} from "../services/mail.service";
 
 @Controller('api/v1/competition')
 @ApiTags("App")
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService,
+              private readonly mailService: MailService) {}
 
   @Roles(Role.Admin, Role.User)
   @UseGuards(RoleAuthGuard)
@@ -100,7 +104,16 @@ export class AppController {
     return await this.appService.findActiveCompetitions(page, limit);
   }
 
+  @Public()
+  @Post("vote/:contestantId")
+  async vote(@Body() req: VoteDto) {
+    return await this.appService.voteForContestant(req);
+  }
 
-
+  @Public()
+  @Post("email")
+  async sendEmail(@Body() req: CreateEmailDto) {
+    return await this.mailService.pickEmailTemplate(req);
+  }
 
 }

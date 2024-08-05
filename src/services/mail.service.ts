@@ -2,7 +2,7 @@ import {CreateEmailDto} from "../models/dto/create-email.dto";
 import * as nodemailer from 'nodemailer';
 import {htmlToText} from 'nodemailer-html-to-text';
 import {Injectable, NotFoundException} from "@nestjs/common";
-import fs from "fs";
+import * as fs from "fs";
 import * as handlebars from 'handlebars';
 import * as process from "process";
 
@@ -56,6 +56,7 @@ export class MailService {
             handlebars.registerHelper('lt', (a, b) => a < b);
             handlebars.registerHelper('lte', (a, b) => a <= b);
             const filePath = `${destination}/${folderName[0]}/${folderName[1]}.html`;
+            console.log(filePath)
             const source = fs.readFileSync(filePath, 'utf-8').toString();
             const template = await handlebars.compile(source);
             const data = emailData.data;

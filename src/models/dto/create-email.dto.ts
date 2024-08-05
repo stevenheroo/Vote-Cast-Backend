@@ -69,11 +69,11 @@ export class CreateEmailDto implements CreateEmail {
 
   @ApiProperty({
     required: false,
-    default: 'Stanbic Bank<noreply@stanbic.com.gh>',
+    default: 'lns <noreply@gmail.com.gh>',
     description:
       "This is the field to pass the 'from' email address. It's defaulted to SBG's noreply",
   })
-  mailFrom?: string = 'Stanbic Bank<noreply@stanbic.com.gh>';
+  mailFrom?: string = 'lns <noreply@gmail.com.gh>';
 
   @ApiProperty({
     type: [String],

@@ -86,7 +86,7 @@ export class Contestants {
     description: string;
     @Prop({ unique: true })
     @ApiProperty()
-    voteCode: string;
+    shortCode: string;
     @Prop()
     @ApiProperty()
     totalVotes: number;

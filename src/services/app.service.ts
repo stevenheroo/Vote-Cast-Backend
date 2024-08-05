@@ -7,6 +7,7 @@ import {Status} from "../models/schemas/enums/status.enum";
 import {Competitions, Contestants} from "../models/schemas/competition.schema";
 import {Ids} from "../models/dto/ids";
 import {ContestantObj} from "../models/dto/contestant";
+import {VoteDto} from "../models/dto/vote.dto";
 
 @Injectable()
 export class AppService {
@@ -390,5 +391,16 @@ export class AppService {
       "result": results,
       paginator
     };
+  }
+
+  async voteForContestant(req: VoteDto) {
+    try {
+
+    }catch (error) {
+      console.log(error)
+      return {
+        "response": new HttpException(customResponse.failed, 400)
+      };
+    }
   }
 }
